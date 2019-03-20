@@ -1179,6 +1179,7 @@ void MainWindow::setMenusForSelectedPacket()
     have_filter_expr = !packet_list_->getFilterFromRowAndColumn().isEmpty();
 
     main_ui_->actionEditMarkPacket->setEnabled(frame_selected);
+    main_ui_->actionEditDataCarvePacket->setEnabled(frame_selected);
     main_ui_->actionEditMarkAllDisplayed->setEnabled(have_frames);
     /* Unlike un-ignore, do not allow unmark of all frames when no frames are displayed  */
     main_ui_->actionEditUnmarkAllDisplayed->setEnabled(have_marked);
@@ -2014,6 +2015,12 @@ void MainWindow::on_actionEditMarkPacket_triggered()
     packet_list_->markFrame();
     thaw();
     setMenusForSelectedPacket();
+}
+
+void MainWindow::on_actionEditDataCarvePacket_triggered()
+{
+    // TODO: implement
+    // I think raw packet data is in: capture_file_.capFile().buf.data
 }
 
 void MainWindow::on_actionEditMarkAllDisplayed_triggered()

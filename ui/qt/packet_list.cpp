@@ -512,6 +512,7 @@ void PacketList::contextMenuEvent(QContextMenuEvent *event)
     // XXX We might want to reimplement setParent() and fill in the context
     // menu there.
     ctx_menu_.addAction(window()->findChild<QAction *>("actionEditMarkPacket"));
+    ctx_menu_.addAction(window()->findChild<QAction *>("actionEditDataCarvePacket"));
     ctx_menu_.addAction(window()->findChild<QAction *>("actionEditIgnorePacket"));
     ctx_menu_.addAction(window()->findChild<QAction *>("actionEditSetTimeReference"));
     ctx_menu_.addAction(window()->findChild<QAction *>("actionEditTimeShift"));

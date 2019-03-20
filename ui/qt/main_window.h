@@ -457,6 +457,7 @@ private slots:
     void on_actionEditFindNext_triggered();
     void on_actionEditFindPrevious_triggered();
     void on_actionEditMarkPacket_triggered();
+    void on_actionEditDataCarvePacket_triggered();
     void on_actionEditMarkAllDisplayed_triggered();
     void on_actionEditUnmarkAllDisplayed_triggered();
     void on_actionEditNextMark_triggered();

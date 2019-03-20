@@ -642,6 +642,7 @@
     <addaction name="actionEditFindPrevious"/>
     <addaction name="separator"/>
     <addaction name="actionEditMarkPacket"/>
+    <addaction name="actionEditDataCarvePacket"/>
     <addaction name="actionEditMarkAllDisplayed"/>
     <addaction name="actionEditUnmarkAllDisplayed"/>
     <addaction name="actionEditNextMark"/>
@@ -1514,6 +1515,17 @@
    </property>
    <property name="shortcut">
     <string notr="true">Ctrl+M</string>
+   </property>
+  </action>
+  <action name="actionEditDataCarvePacket">
+   <property name="text">
+    <string>Carve packet for data</string>
+   </property>
+   <property name="toolTip">
+    <string>Attempts to file carve this packet for rich media types</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+Alt+\</string>
    </property>
   </action>
   <action name="actionEditMarkAllDisplayed">
