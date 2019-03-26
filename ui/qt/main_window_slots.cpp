@@ -2053,6 +2053,40 @@ void MainWindow::on_actionEditDataCarvePacket_triggered()
         write_failure_alert_box(qUtf8Printable(file_name), errno);
         return;
     }
+
+    // follow_info_t           follow_info_;
+    // memset(&follow_info_, 0, sizeof(follow_info_));
+    // follow_info_.show_stream = BOTH_HOSTS;
+    // follow_reset_stream(&follow_info_);
+
+    // guint32 global_client_pos = 0, global_server_pos = 0;
+    // guint32 *global_pos;
+    // gboolean skip;
+    // GList* cur;
+    // frs_return_t frs_return;
+    // follow_record_t *follow_record;
+    // for (cur = g_list_last(follow_info_.payload); cur; cur = g_list_previous(cur)) {
+    //     follow_record = (follow_record_t *)cur->data;
+    //     skip = FALSE;
+    //     if (!follow_record->is_server) {
+    //         global_pos = &global_client_pos;
+    //         if(follow_info_.show_stream == FROM_SERVER) {
+    //             skip = TRUE;
+    //         }
+    //     } else {
+    //         global_pos = &global_server_pos;
+    //         if (follow_info_.show_stream == FROM_CLIENT) {
+    //             skip = TRUE;
+    //         }
+    //     }
+    //
+    //     QByteArray buffer;
+    //     if (!skip) {
+    //         // We want a deep copy.
+    //         buffer.clear();
+    //         buffer.append((const char *) follow_record->data->data,
+    //                                  follow_record->data->len);
+
 }
 
 void MainWindow::on_actionEditMarkAllDisplayed_triggered()
