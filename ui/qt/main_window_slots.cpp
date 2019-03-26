@@ -8,6 +8,9 @@
  */
 
 #include <config.h>
+#include <QDebug>
+#include <QFile>
+#include <QTextStream>
 
 // Qt 5.5.0 + Visual C++ 2013
 #ifdef _MSC_VER
@@ -2019,8 +2022,37 @@ void MainWindow::on_actionEditMarkPacket_triggered()
 
 void MainWindow::on_actionEditDataCarvePacket_triggered()
 {
-    // TODO: implement
-    // I think raw packet data is in: capture_file_.capFile().buf.data
+    QString file_name = WiresharkFileDialog::getSaveFileName(this,
+                           wsApp->windowTitleString(tr("Export Selected Packet Bytes")),
+                           wsApp->lastOpenDir().canonicalPath(),
+                           tr("Raw data (*.bin *.dat *.raw);;All Files (" ALL_FILES_WILDCARD ")")
+                        );
+
+    const guint8 *data_p;
+    int fd;
+
+    frame_data* fdata = capture_file_.capFile()->current_frame;
+    data_p = (const guint8 *) g_memdup(ws_buffer_start_ptr(&(capture_file_.capFile()->buf)), fdata->pkt_len);
+
+    QMessageBox::information(this, tr("got data p"),
+                tr("got data p"),
+                QMessageBox::Ok);
+
+    fd = ws_open(qUtf8Printable(file_name), O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0666);
+    if (fd == -1) {
+        open_failure_alert_box(qUtf8Printable(file_name), errno, TRUE);
+        return;
+    }
+
+    if (ws_write(fd, data_p, fdata->pkt_len) < 0) {
+        write_failure_alert_box(qUtf8Printable(file_name), errno);
+        ws_close(fd);
+    }
+
+    if (ws_close(fd) < 0) {
+        write_failure_alert_box(qUtf8Printable(file_name), errno);
+        return;
+    }
 }
 
 void MainWindow::on_actionEditMarkAllDisplayed_triggered()
