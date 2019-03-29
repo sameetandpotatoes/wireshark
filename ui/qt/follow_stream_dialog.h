@@ -44,6 +44,9 @@ public:
 
     bool follow(QString previous_filter = QString(), bool use_stream_index = false, guint stream_num = 0);
 
+    QByteArray getBytes() const;
+    void switchShowType(show_type_t new_show_type);
+
 public slots:
     void captureEvent(CaptureEvent e);
 

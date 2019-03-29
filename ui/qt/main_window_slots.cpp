@@ -8,9 +8,6 @@
  */
 
 #include <config.h>
-#include <QDebug>
-#include <QFile>
-#include <QTextStream>
 
 // Qt 5.5.0 + Visual C++ 2013
 #ifdef _MSC_VER
@@ -2022,71 +2019,29 @@ void MainWindow::on_actionEditMarkPacket_triggered()
 
 void MainWindow::on_actionEditDataCarvePacket_triggered()
 {
-    QString file_name = WiresharkFileDialog::getSaveFileName(this,
-                           wsApp->windowTitleString(tr("Export Selected Packet Bytes")),
-                           wsApp->lastOpenDir().canonicalPath(),
-                           tr("Raw data (*.bin *.dat *.raw);;All Files (" ALL_FILES_WILDCARD ")")
-                        );
-
-    const guint8 *data_p;
-    int fd;
-
-    frame_data* fdata = capture_file_.capFile()->current_frame;
-    data_p = (const guint8 *) g_memdup(ws_buffer_start_ptr(&(capture_file_.capFile()->buf)), fdata->pkt_len);
-
-    QMessageBox::information(this, tr("got data p"),
-                tr("got data p"),
-                QMessageBox::Ok);
-
-    fd = ws_open(qUtf8Printable(file_name), O_WRONLY|O_CREAT|O_TRUNC|O_BINARY, 0666);
-    if (fd == -1) {
-        open_failure_alert_box(qUtf8Printable(file_name), errno, TRUE);
+    FollowStreamDialog *fsd = new FollowStreamDialog(*this, capture_file_, FOLLOW_TCP);
+    connect(fsd, SIGNAL(updateFilter(QString, bool)), this, SLOT(filterPackets(QString, bool)));
+    connect(fsd, SIGNAL(goToPacket(int)), packet_list_, SLOT(goToPacket(int)));
+    fsd->follow(getFilter());
+    
+    QString file_name = WiresharkFileDialog::getSaveFileName(this, wsApp->windowTitleString(tr("Save Stream Content As" UTF8_HORIZONTAL_ELLIPSIS)));
+    if (file_name.isEmpty()) {
         return;
     }
 
-    if (ws_write(fd, data_p, fdata->pkt_len) < 0) {
-        write_failure_alert_box(qUtf8Printable(file_name), errno);
-        ws_close(fd);
-    }
-
-    if (ws_close(fd) < 0) {
-        write_failure_alert_box(qUtf8Printable(file_name), errno);
+    QFile file(file_name);
+    if (!file.open(QIODevice::WriteOnly)) {
+        open_failure_alert_box(file_name.toUtf8().constData(), errno, TRUE);
         return;
     }
 
-    // follow_info_t           follow_info_;
-    // memset(&follow_info_, 0, sizeof(follow_info_));
-    // follow_info_.show_stream = BOTH_HOSTS;
-    // follow_reset_stream(&follow_info_);
-
-    // guint32 global_client_pos = 0, global_server_pos = 0;
-    // guint32 *global_pos;
-    // gboolean skip;
-    // GList* cur;
-    // frs_return_t frs_return;
-    // follow_record_t *follow_record;
-    // for (cur = g_list_last(follow_info_.payload); cur; cur = g_list_previous(cur)) {
-    //     follow_record = (follow_record_t *)cur->data;
-    //     skip = FALSE;
-    //     if (!follow_record->is_server) {
-    //         global_pos = &global_client_pos;
-    //         if(follow_info_.show_stream == FROM_SERVER) {
-    //             skip = TRUE;
-    //         }
-    //     } else {
-    //         global_pos = &global_server_pos;
-    //         if (follow_info_.show_stream == FROM_CLIENT) {
-    //             skip = TRUE;
-    //         }
-    //     }
-    //
-    //     QByteArray buffer;
-    //     if (!skip) {
-    //         // We want a deep copy.
-    //         buffer.clear();
-    //         buffer.append((const char *) follow_record->data->data,
-    //                                  follow_record->data->len);
-
+    fsd->switchShowType(SHOW_RAW);
+    QByteArray bytes = fsd->getBytes();
+    // The "Raw" format is currently displayed as hex data and needs to be
+    // converted to binary data.
+    bytes = QByteArray::fromHex(bytes);
+    QDataStream out(&file);
+    out.writeRawData(bytes.constData(), bytes.size());
 }
 
 void MainWindow::on_actionEditMarkAllDisplayed_triggered()

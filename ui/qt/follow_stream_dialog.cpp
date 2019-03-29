@@ -937,6 +937,15 @@ bool FollowStreamDialog::follow(QString previous_filter, bool use_stream_index, 
     return true;
 }
 
+QByteArray FollowStreamDialog::getBytes() const {
+    return ui->teStreamContent->toPlainText().toUtf8();
+}
+
+void FollowStreamDialog::switchShowType(show_type_t new_show_type) {
+    show_type_ = new_show_type;
+    readStream();
+}
+
 void FollowStreamDialog::captureEvent(CaptureEvent e)
 {
     if ((e.captureContext() == CaptureEvent::File) &&
