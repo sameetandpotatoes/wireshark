@@ -8,6 +8,7 @@
  */
 
 #include <config.h>
+#include "wsutil/tempfile.h"
 
 // Qt 5.5.0 + Visual C++ 2013
 #ifdef _MSC_VER
@@ -2019,29 +2020,36 @@ void MainWindow::on_actionEditMarkPacket_triggered()
 
 void MainWindow::on_actionEditDataCarvePacket_triggered()
 {
-    FollowStreamDialog *fsd = new FollowStreamDialog(*this, capture_file_, FOLLOW_TCP);
+    // Make the UI follow the stream
+    FollowStreamDialog* fsd = new FollowStreamDialog(*this, capture_file_, FOLLOW_TCP);
     connect(fsd, SIGNAL(updateFilter(QString, bool)), this, SLOT(filterPackets(QString, bool)));
     connect(fsd, SIGNAL(goToPacket(int)), packet_list_, SLOT(goToPacket(int)));
     fsd->follow(getFilter());
-    
-    QString file_name = WiresharkFileDialog::getSaveFileName(this, wsApp->windowTitleString(tr("Save Stream Content As" UTF8_HORIZONTAL_ELLIPSIS)));
-    if (file_name.isEmpty()) {
-        return;
-    }
-
-    QFile file(file_name);
-    if (!file.open(QIODevice::WriteOnly)) {
-        open_failure_alert_box(file_name.toUtf8().constData(), errno, TRUE);
-        return;
-    }
-
+    // Switch to raw
     fsd->switchShowType(SHOW_RAW);
     QByteArray bytes = fsd->getBytes();
     // The "Raw" format is currently displayed as hex data and needs to be
     // converted to binary data.
     bytes = QByteArray::fromHex(bytes);
-    QDataStream out(&file);
-    out.writeRawData(bytes.constData(), bytes.size());
+
+    char *tmpname;
+    int fd = create_tempfile(&tmpname, "ws", NULL);
+    QString file_path = QString::fromStdString(tmpname);
+    if (file_path.isEmpty()) {
+        return;
+    }
+
+    write(fd, bytes.constData(), bytes.size());
+
+    // TODO figure out why foremost command isn't working.
+    std::string shell_cmd("/usr/local/bin/foremost ");
+    shell_cmd += tmpname;
+    failure_alert_box("shell command is: %s", shell_cmd.c_str());
+
+    int status = system(shell_cmd.c_str());
+    failure_alert_box("status of cmd is: %d", status);
+
+    // TODO open a dialog with the rich media type loaded?
 }
 
 void MainWindow::on_actionEditMarkAllDisplayed_triggered()
