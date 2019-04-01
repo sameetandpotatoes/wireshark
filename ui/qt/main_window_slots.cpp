@@ -2039,17 +2039,34 @@ void MainWindow::on_actionEditDataCarvePacket_triggered()
         return;
     }
 
-    write(fd, bytes.constData(), bytes.size());
+    int status;
+    status = write(fd, bytes.constData(), bytes.size());
+    if (status == 0) {
+    }
 
-    // TODO figure out why foremost command isn't working.
-    std::string shell_cmd("/usr/local/bin/foremost ");
-    shell_cmd += tmpname;
-    failure_alert_box("shell command is: %s", shell_cmd.c_str());
+    char output_dir[512];
+    sprintf(output_dir, "%s-foremost.output", tmpname);
+    char shell_cmd[512];
+    sprintf(shell_cmd, "foremost %s -v -o %s", tmpname, output_dir);
 
-    int status = system(shell_cmd.c_str());
-    failure_alert_box("status of cmd is: %d", status);
+    QProcess foremostProcess;
+    foremostProcess.start(QString(shell_cmd));
+    foremostProcess.waitForFinished();
+    QString output(foremostProcess.readAllStandardOutput());
 
-    // TODO open a dialog with the rich media type loaded?
+    // TODO: handle foremost error
+    
+    QMessageBox msgBox;
+    msgBox.setText(output);
+    QAbstractButton* show = msgBox.addButton(tr("Show artifacts in folder"), QMessageBox::YesRole);
+    QAbstractButton* no_show = msgBox.addButton(tr("Ok"), QMessageBox::NoRole);
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == show) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(output_dir));
+    } else if (msgBox.clickedButton() == no_show) {
+        // msgBox auto closes
+    }
 }
 
 void MainWindow::on_actionEditMarkAllDisplayed_triggered()
