@@ -46,6 +46,7 @@ public:
 
     QByteArray getBytes() const;
     void switchShowType(show_type_t new_show_type);
+    void close();
 
 public slots:
     void captureEvent(CaptureEvent e);
@@ -62,7 +63,6 @@ private slots:
 
     void helpButton();
     void backButton();
-    void close();
     void filterOut();
     void useRegexFind(bool use_regex);
     void findText(bool go_back = true);

@@ -2031,30 +2031,31 @@ void MainWindow::on_actionEditDataCarvePacket_triggered()
     // The "Raw" format is currently displayed as hex data and needs to be
     // converted to binary data.
     bytes = QByteArray::fromHex(bytes);
+    // Resets the stream back to normal
+    fsd->close();
 
-    char *tmpname;
-    int fd = create_tempfile(&tmpname, "ws", NULL);
-    QString file_path = QString::fromStdString(tmpname);
+    char* temp_file;
+    int fd = create_tempfile(&temp_file, "ws", NULL);
+    QString file_path = QString::fromStdString(temp_file);
     if (file_path.isEmpty()) {
         return;
     }
 
-    int status;
+    ssize_t status;
     status = write(fd, bytes.constData(), bytes.size());
     if (status == 0) {
     }
 
     char output_dir[512];
-    sprintf(output_dir, "%s-foremost.output", tmpname);
+    sprintf(output_dir, "%s-foremost.output", temp_file);
+
     char shell_cmd[512];
-    sprintf(shell_cmd, "foremost %s -v -o %s", tmpname, output_dir);
+    sprintf(shell_cmd, "/bin/sh -c \"foremost -i %s -o %s -v\"", temp_file, output_dir);
 
     QProcess foremostProcess;
     foremostProcess.start(QString(shell_cmd));
     foremostProcess.waitForFinished();
     QString output(foremostProcess.readAllStandardOutput());
-
-    // TODO: handle foremost error
     
     QMessageBox msgBox;
     msgBox.setText(output);
@@ -2062,8 +2063,11 @@ void MainWindow::on_actionEditDataCarvePacket_triggered()
     QAbstractButton* no_show = msgBox.addButton(tr("Ok"), QMessageBox::NoRole);
     msgBox.exec();
 
+    // Delete the temp file, which contains the raw bytes
+    ws_unlink(temp_file);
+
     if (msgBox.clickedButton() == show) {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(output_dir));
+        desktop_show_in_folder(output_dir);
     } else if (msgBox.clickedButton() == no_show) {
         // msgBox auto closes
     }
