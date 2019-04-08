@@ -2034,29 +2034,40 @@ void MainWindow::on_actionEditDataCarvePacket_triggered()
     // Resets the stream back to normal
     fsd->close();
 
-    char* temp_file;
-    int fd = create_tempfile(&temp_file, "ws", NULL);
-    QString file_path = QString::fromStdString(temp_file);
-    if (file_path.isEmpty()) {
-        return;
-    }
+    // create temp file path to write files to.
+    char temp_filepath[512];
+    QString filename = QString(QCryptographicHash::hash((bytes),QCryptographicHash::Md5).toHex());
+    sprintf(temp_filepath, "%s/%s", QDir::tempPath().toUtf8().constData(), filename.toUtf8().constData());
 
-    ssize_t status;
-    status = write(fd, bytes.constData(), bytes.size());
-    if (status == 0) {
-    }
+    // open file.
+    QFile file(QString::fromStdString(temp_filepath));
+    file.open(QIODevice::WriteOnly);
 
+    // write the raw bytes as a binary file.
+    QDataStream out(&file);
+    out.writeRawData(bytes.constData(), bytes.size());
+    file.close();
+
+    // create temp output directory.
     char output_dir[512];
-    sprintf(output_dir, "%s-foremost.output", temp_file);
+    sprintf(output_dir, "%s-foremost.output/", temp_filepath);
 
+    // if directory exists already remove it.
+    QDir dir(output_dir);
+    if(dir.exists()) {
+        dir.removeRecursively();
+    }
+
+    // runs the foremost command on the binary file previously generated.
     char shell_cmd[512];
-    sprintf(shell_cmd, "/bin/sh -c \"foremost -i %s -o %s -v\"", temp_file, output_dir);
+    sprintf(shell_cmd, "/bin/sh -c \"foremost -i %s -o %s -v\"", temp_filepath, output_dir);
 
     QProcess foremostProcess;
     foremostProcess.start(QString(shell_cmd));
     foremostProcess.waitForFinished();
     QString output(foremostProcess.readAllStandardOutput());
     
+    // prompts the user for actions.
     QMessageBox msgBox;
     msgBox.setText(output);
     QAbstractButton* show = msgBox.addButton(tr("Show artifacts in folder"), QMessageBox::YesRole);
@@ -2064,7 +2075,7 @@ void MainWindow::on_actionEditDataCarvePacket_triggered()
     msgBox.exec();
 
     // Delete the temp file, which contains the raw bytes
-    ws_unlink(temp_file);
+    file.remove();
 
     if (msgBox.clickedButton() == show) {
         desktop_show_in_folder(output_dir);
